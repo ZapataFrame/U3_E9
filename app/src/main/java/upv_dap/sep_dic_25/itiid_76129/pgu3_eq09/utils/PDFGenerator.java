@@ -16,7 +16,7 @@ import upv_dap.sep_dic_25.itiid_76129.pgu3_eq09.models.ImagePage;
 import upv_dap.sep_dic_25.itiid_76129.pgu3_eq09.models.PageItem;
 
 /**
- * Clase utilitaria para generar documentos PDF con collages de imágenes
+ * Clase utilitaria para generar documentos esto solo es para acompletar el PDF con collages de imágenes
  * Convierte una lista de imágenes en un PDF organizado en cuadrícula
  */
 public class PDFGenerator {

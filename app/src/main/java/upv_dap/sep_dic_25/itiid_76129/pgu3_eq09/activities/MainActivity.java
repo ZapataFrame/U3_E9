@@ -18,6 +18,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +41,7 @@ import upv_dap.sep_dic_25.itiid_76129.pgu3_eq09.utils.PermissionManager;
 public class MainActivity extends AppCompatActivity implements ImageGridAdapter.OnImageClickListener {
 
     private static final String TAG = "MainActivity";
-    private static final int REQUEST_IMAGE_SELECTION = 100;
+    // private static final int REQUEST_IMAGE_SELECTION = 100; // Deprecated
     private static final String DEFAULT_METADATA_MESSAGE = "Toca una imagen para ver metadatos";
 
     private Button selectImagesButton;
@@ -61,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
     private final List<ImagePage> pages = new ArrayList<>();
     private int currentPageIndex = 0;
     private PDFGenerator.PageSize currentPageSize = PDFGenerator.PageSize.LETTER;
+
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +107,14 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
                 resetMetadataMessage();
             }
         });
+
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        processSelectedImages(result.getData());
+                    }
+                });
     }
 
     private void setupUI() {
@@ -123,10 +135,9 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
         layoutButton.setOnClickListener(v -> showLayoutSelectionDialog());
 
         ArrayAdapter<CharSequence> sizeAdapter = ArrayAdapter.createFromResource(
-            this,
-            R.array.page_size_options,
-            android.R.layout.simple_spinner_item
-        );
+                this,
+                R.array.page_size_options,
+                android.R.layout.simple_spinner_item);
         sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         pageSizeSpinner.setAdapter(sizeAdapter);
         pageSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -141,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
             }
         });
     }
-    
+
     /**
      * Verifica y solicita permisos necesarios como en la aplicación original
      */
@@ -154,23 +165,24 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
             permissionManager.requestPermission();
         }
     }
-    
+
     /**
      * Crea la carpeta para almacenar archivos como en la aplicación original
      */
     private void createFolder() {
+
         String directory = "Documents";
         String folderName = "HomeroImageArranger";
         File file = new File(Environment.getExternalStorageDirectory(), directory + "/" + folderName);
-        
+
         boolean folderCreated = file.mkdirs();
         if (folderCreated || file.exists()) {
-            showToast("Folder Created: " + file.getAbsolutePath());
+            showToast("Carpeta creada: " + file.getAbsolutePath());
         } else {
-            showToast("Folder not created....");
+            showToast("No se pudo crear la carpeta...");
         }
     }
-    
+
     /**
      * Abre el selector de múltiples imágenes
      */
@@ -178,10 +190,12 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        
-        startActivityForResult(Intent.createChooser(intent, "Select Images"), REQUEST_IMAGE_SELECTION);
+
+        // startActivityForResult(Intent.createChooser(intent, "Seleccionar Imágenes"),
+        // REQUEST_IMAGE_SELECTION);
+        imagePickerLauncher.launch(Intent.createChooser(intent, "Seleccionar Imágenes"));
     }
-    
+
     private void generatePDF() {
         if (!hasAnyImages()) {
             showToast("Selecciona al menos una imagen antes de generar el PDF");
@@ -190,16 +204,20 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
 
         PDFGenerator.generatePDF(this, pages, currentPageSize);
     }
-    
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        
-        if (requestCode == REQUEST_IMAGE_SELECTION && resultCode == RESULT_OK && data != null) {
-            processSelectedImages(data);
-        }
-    }
-    
+
+    /*
+     * @Override
+     * protected void onActivityResult(int requestCode, int resultCode, @Nullable
+     * Intent data) {
+     * super.onActivityResult(requestCode, resultCode, data);
+     * 
+     * if (requestCode == REQUEST_IMAGE_SELECTION && resultCode == RESULT_OK && data
+     * != null) {
+     * processSelectedImages(data);
+     * }
+     * }
+     */
+
     /**
      * Procesa las imágenes seleccionadas por el usuario
      */
@@ -219,10 +237,10 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
         }
 
         refreshGrid();
-        Log.d(TAG, "Selected " + currentPage.getImageCount() + " images on current page");
+        Log.d(TAG, "Seleccionadas " + currentPage.getImageCount() + " imágenes en la página actual");
         maybePromptLayoutSelection(previousCount, currentPage);
     }
-    
+
     @Override
     public void onImageClick(PageItem item, int position) {
         if (item.isPlaceholder()) {
@@ -244,17 +262,18 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
             metadataTextView.setText("No es posible obtener metadatos");
         }
     }
-    
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        
+
         // Manejar resultado de permisos para versiones anteriores a Android 11
         if (permissionManager.handlePermissionResult(requestCode, permissions, grantResults)) {
             createFolder();
         }
     }
-    
+
     /**
      * Muestra un mensaje toast corto
      */
@@ -275,17 +294,17 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
 
     private void updatePageInfo() {
         String info = String.format(Locale.getDefault(),
-            "Página %d de %d | Imágenes: %d",
-            currentPageIndex + 1,
-            pages.size(),
-            getCurrentPage().getImageCount());
+                "Página %d de %d | Imágenes: %d",
+                currentPageIndex + 1,
+                pages.size(),
+                getCurrentPage().getImageCount());
         pageInfoTextView.setText(info);
     }
 
     private void updateLayoutButtonLabel() {
         ImagePage page = getCurrentPage();
         layoutButton.setText(String.format(Locale.getDefault(), "Rejilla %dx%d",
-            page.getEffectiveRows(), page.getColumns()));
+                page.getEffectiveRows(), page.getColumns()));
     }
 
     private void clearWorkspace() {
@@ -365,14 +384,14 @@ public class MainActivity extends AppCompatActivity implements ImageGridAdapter.
         }
 
         new AlertDialog.Builder(this)
-            .setTitle("Selecciona la rejilla")
-            .setItems(labels, (dialog, which) -> {
-                GridOption option = options.get(which);
-                page.setLayout(option.rows, option.columns);
-                refreshGrid();
-            })
-            .setNegativeButton("Cancelar", null)
-            .show();
+                .setTitle("Selecciona la rejilla")
+                .setItems(labels, (dialog, which) -> {
+                    GridOption option = options.get(which);
+                    page.setLayout(option.rows, option.columns);
+                    refreshGrid();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
     private List<GridOption> buildGridOptions(int slotCount) {
