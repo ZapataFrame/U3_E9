@@ -17,7 +17,8 @@ import upv_dap.sep_dic_25.itiid_76129.pgu3_eq09.R;
 import upv_dap.sep_dic_25.itiid_76129.pgu3_eq09.models.PageItem;
 
 /**
- * Adaptador personalizado para mostrar imágenes y espacios en blanco dentro de una cuadrícula
+ * Adaptador personalizado para mostrar imágenes y espacios en blanco dentro de
+ * una cuadrícula
  * con soporte de selección múltiple.
  */
 public class ImageGridAdapter extends BaseAdapter {
@@ -109,24 +110,25 @@ public class ImageGridAdapter extends BaseAdapter {
         } else if (item.getUri() != null) {
             holder.placeholderLabel.setVisibility(View.GONE);
             Picasso.get()
-                .load(item.getUri())
-                .resize(cellSize, cellSize)
-                .centerCrop()
-                .placeholder(android.R.drawable.ic_menu_gallery)
-                .error(android.R.drawable.ic_menu_report_image)
-                .into(holder.imageView);
+                    .load(item.getUri())
+                    .resize(cellSize, cellSize)
+                    .centerCrop()
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .error(android.R.drawable.ic_menu_report_image)
+                    .into(holder.imageView);
         } else {
             holder.placeholderLabel.setVisibility(View.GONE);
             holder.imageView.setImageDrawable(null);
         }
 
         holder.selectionOverlay.setVisibility(isSelected(position) ? View.VISIBLE : View.GONE);
+        holder.iconCheck.setVisibility(isSelected(position) ? View.VISIBLE : View.GONE);
 
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!selectedPositions.isEmpty()) {
-                    toggleSelection(position);
+                    toggleSelection(position, v);
                 } else if (onImageClickListener != null) {
                     onImageClickListener.onImageClick(item, position);
                 }
@@ -136,7 +138,7 @@ public class ImageGridAdapter extends BaseAdapter {
         convertView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                toggleSelection(position);
+                toggleSelection(position, v);
                 return true;
             }
         });
@@ -144,14 +146,23 @@ public class ImageGridAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void toggleSelection(int position) {
+    public void toggleSelection(int position, View view) {
         if (selectedPositions.contains(position)) {
             selectedPositions.remove(position);
         } else {
             selectedPositions.add(position);
         }
         notifySelectionListener();
-        notifyDataSetChanged();
+
+        // Update visual state directly to avoid full refresh delay
+        if (view != null) {
+            ViewHolder holder = (ViewHolder) view.getTag();
+            if (holder != null) {
+                boolean isSelected = isSelected(position);
+                holder.selectionOverlay.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+                holder.iconCheck.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+            }
+        }
     }
 
     public void clearSelection() {
@@ -183,11 +194,13 @@ public class ImageGridAdapter extends BaseAdapter {
         final ImageView imageView;
         final TextView placeholderLabel;
         final View selectionOverlay;
+        final ImageView iconCheck;
 
         ViewHolder(View root) {
             imageView = root.findViewById(R.id.image_content);
             placeholderLabel = root.findViewById(R.id.placeholder_label);
             selectionOverlay = root.findViewById(R.id.selection_overlay);
+            iconCheck = root.findViewById(R.id.icon_check);
         }
     }
 }

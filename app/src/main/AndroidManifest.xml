@@ -17,7 +17,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+        android:theme="@style/Theme.Z_U3_itiid76129_E_09"
         android:requestLegacyExternalStorage="true"
         tools:targetApi="29">
         <activity

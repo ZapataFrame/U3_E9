@@ -2,4 +2,29 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Primary Brand Colors -->
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryVariant">#3700B3</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    
+    <!-- Secondary Brand Colors -->
+    <color name="colorSecondary">#00E5FF</color> <!-- Brighter Teal -->
+    <color name="colorSecondaryVariant">#00B8D4</color>
+    <color name="colorOnSecondary">#000000</color>
+    
+    <!-- Background and Surface -->
+    <color name="colorBackground">#E0E0E0</color> <!-- Slightly darker gray for better contrast -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnBackground">#000000</color>
+    <color name="colorOnSurface">#000000</color>
+    
+    <!-- Error -->
+    <color name="colorError">#D32F2F</color> <!-- More vibrant red -->
+    <color name="colorOnError">#FFFFFF</color>
+    
+    <!-- UI Elements -->
+    <color name="divider">#1F000000</color>
+    <color name="placeholder_bg">#BDBDBD</color> <!-- Darker placeholder -->
+    <color name="selection_overlay">#806200EE</color> <!-- Semi-transparent primary color for selection -->
 </resources>
